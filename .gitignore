@@ -19,3 +19,8 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Trivial Notes
+nginx.conf
+draco.txt
+server-know-how.txt
