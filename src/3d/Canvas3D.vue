@@ -28,7 +28,7 @@ export default {
     const director = Director.getInstance();
 
     director.initialize();
-    director.createScene();
+    director.createScene("school");
   }
 };
 </script>

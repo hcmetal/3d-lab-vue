@@ -5,8 +5,14 @@ import {
   ArcRotateCamera,
   Scene,
   HemisphericLight,
+  AssetsManager,
+  Matrix,
+  Tools,
+  // Texture,
 } from "@babylonjs/core";
 import "@babylonjs/core/Meshes/meshBuilder";
+import patchWechat from "./patchWechat";
+import "@babylonjs/loaders/glTF";
 
 export default class Director {
   static getInstance() {
@@ -20,12 +26,12 @@ export default class Director {
     console.log("Director created");
 
     this.dataStore = DataStore.getInstance();
+    this.engine = null;
+    this.canvas = null;
     this.id = null;
     this.scene = null;
-    this.canvas = null;
-    // this.assetsManager = null;
+    this.assetsManager = null;
     this.arcRotateCamera = null;
-    // this.cameraFocusAnimation = {};
   }
 
   initialize = () => {
@@ -35,23 +41,24 @@ export default class Director {
 
   clear = () => {
     this.dataStore = null;
+    this.engine = null;
     this.canvas = null;
     this.id = null;
     this.scene = null;
-    // this.assetsManager = null;
+    this.assetsManager = null;
     this.arcRotateCamera = null;
-    // this.cameraFocusAnimation = {};
   };
 
-  createScene = () => {
-    // this.id = id;
+  createScene = (id) => {
+    this.id = id;
 
     this.scene = new Scene(this.engine);
 
-    // patchWechat(this.canvas, this.scene);
+    patchWechat(this.canvas, this.scene);
 
     this.createCamera();
-    // this.loadAssets();
+
+    this.loadAssets();
 
     // Test objects
     Mesh.CreateBox("testBox", 1, this.scene);
@@ -65,7 +72,22 @@ export default class Director {
     //   this.dataStore.get("setPortalTarget")(id);
     // }
 
-    console.log(`SCENE CREATED, RENDERING STARTED`);
+    console.log(`SCENE ${this.id} CREATED, RENDERING STARTED`);
+  };
+
+  disposeScene = () => {
+    this.engine.stopRenderLoop();
+
+    this.scene.dispose();
+    console.log(`SCENE ${this.id} DISPOSED`);
+    console.log("---------------------------------------");
+
+    this.id = null;
+    this.scene = null;
+    this.assetsManager = null;
+    this.arcRotateCamera = null;
+
+    // this.dataStore.get("setLoadFinish")(false);
   };
 
   createCamera = () => {
@@ -94,5 +116,108 @@ export default class Director {
     arcRotateCamera.useAutoRotationBehavior = true;
 
     this.arcRotateCamera = arcRotateCamera;
+  };
+
+  loadAssets = () => {
+    const assetsManager = new AssetsManager(this.scene);
+    assetsManager.useDefaultLoadingScreen = true;
+    this.assetsManager = assetsManager;
+
+    // Load mesh
+    const meshTask = assetsManager.addMeshTask(
+      "mesh task",
+      "",
+      "/assets/",
+      `${this.id}.glb`
+    );
+
+    meshTask.onSuccess = () => {
+      console.log("Mesh loaded");
+    };
+
+    // Load HDR
+    const envTextureTask = assetsManager.addCubeTextureTask(
+      "environment texture task",
+      "./assets/day_02.env"
+    );
+
+    envTextureTask.onSuccess = (task) => {
+      const envTexture = task.texture;
+      envTexture.gammaSpace = false;
+
+      this.scene.environmentTexture = envTexture;
+
+      const hdrRotation = 150;
+      envTexture.setReflectionTextureMatrix(
+        Matrix.RotationY(Tools.ToRadians(hdrRotation))
+      );
+
+      this.dataStore.put("envTexture", envTexture);
+
+      console.log("HDR loaded");
+    };
+
+    // Load complete
+    assetsManager.onFinish = () => {
+      console.log("Assets loaded");
+
+      for (let mesh of this.scene.meshes) {
+        // console.log("Loaded mesh:", mesh.name);
+
+        // Material
+        this.processMaterial(mesh);
+      }
+
+      // Create mesh buttons
+      // meshButton(this.scene);
+
+      // Create camera focus transitions
+      // this.initializeCameraFocus();
+
+      // Notify load finish
+      // setTimeout(() => {
+      //   this.dataStore.get("setLoadFinish")(true);
+      // }, 200);
+    };
+
+    assetsManager.load();
+  };
+
+  processMaterial = (mesh) => {
+    if (mesh.material) {
+      // scene.environmentIntensity doesn't work, set per material
+      mesh.material.environmentIntensity = 0.3;
+
+      // Emissive material
+      if (mesh.name.includes("EM")) {
+        mesh.material.environmentIntensity = 0;
+      }
+
+      // Transparent material
+      if (mesh.name.includes("GLASS")) {
+        mesh.material.transparencyMode = 2;
+        mesh.material.alpha = 0.5;
+      }
+
+      // Lightmaps
+      // if (mesh.name.includes("LM")) {
+      //   // const nameKeyWord = mesh.name.split(".")[0];
+      //   // console.log(nameKeyWord);
+
+      //   const lightmap = new Texture(
+      //     `./assets/lightmap/bake_${mesh.name}_DF.jpeg`,
+      //     this.scene
+      //   );
+
+      //   lightmap.level = 1.1;
+      //   lightmap.vScale = -1.0;
+
+      //   mesh.material.lightmapTexture = lightmap;
+      //   mesh.material.lightmapTexture.coordinatesIndex = 1;
+      //   mesh.material.useLightmapAsShadowmap = false;
+
+      //   mesh.material.environmentIntensity = 0.075;
+      // }
+    }
   };
 }
