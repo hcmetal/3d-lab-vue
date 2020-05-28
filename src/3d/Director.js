@@ -93,18 +93,18 @@ export default class Director {
   createCamera = () => {
     const arcRotateCamera = new ArcRotateCamera(
       "arcRotateCamera",
-      Math.PI * -0.35,
-      Math.PI * 0.25,
-      5,
+      Math.PI * 0.5,
+      Math.PI * 0.35,
+      10,
       new Vector3(0, 0, 0),
       this.scene
     );
 
-    arcRotateCamera.fov = 0.9;
+    arcRotateCamera.fov = 0.8;
     arcRotateCamera.wheelPrecision = 8.0;
     arcRotateCamera.pinchPrecision = 8.0;
-    arcRotateCamera.lowerRadiusLimit = 2;
-    arcRotateCamera.upperRadiusLimit = 10;
+    arcRotateCamera.lowerRadiusLimit = 5;
+    arcRotateCamera.upperRadiusLimit = 20;
     arcRotateCamera.lowerAlphaLimit = undefined;
     arcRotateCamera.upperAlphaLimit = undefined;
     arcRotateCamera.lowerBetaLimit = Math.PI * 0.05;

@@ -16,19 +16,21 @@ export default {
     const canvas = this.$refs.canvas3D;
     dataStore.put("canvas", canvas);
 
-    const engine = new Engine(canvas, true);
-    engine.setHardwareScalingLevel(1.0);
-    dataStore.put("engine", engine);
+    setTimeout(() => {
+      const engine = new Engine(canvas, true);
+      engine.setHardwareScalingLevel(1.0);
+      dataStore.put("engine", engine);
 
-    const onResizeWindow = () => {
-      engine.resize();
-    };
-    window.addEventListener("resize", onResizeWindow);
+      const onResizeWindow = () => {
+        engine.resize();
+      };
+      window.addEventListener("resize", onResizeWindow);
 
-    const director = Director.getInstance();
+      const director = Director.getInstance();
 
-    director.initialize();
-    director.createScene("school");
+      director.initialize();
+      director.createScene("school");
+    }, 200);
   }
 };
 </script>
