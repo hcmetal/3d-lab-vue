@@ -1,18 +1,15 @@
-import DataStore from "../DataStore";
-import {
-  Vector3,
-  Mesh,
-  ArcRotateCamera,
-  Scene,
-  HemisphericLight,
-  AssetsManager,
-  Matrix,
-  Tools,
-  // Texture,
-} from "@babylonjs/core";
-import "@babylonjs/core/Meshes/meshBuilder";
+// import DataStore from "../DataStore";
+import { Engine } from "@babylonjs/core/Engines/engine";
+import { Scene } from "@babylonjs/core/scene";
+import { Vector3 } from "@babylonjs/core/Maths/math";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
+import { Tools } from "@babylonjs/core/Misc/tools";
+import { Matrix } from "@babylonjs/core/Maths/math";
+// import "@babylonjs/core/Meshes/meshBuilder";
 import patchWechat from "./patchWechat";
-import "@babylonjs/loaders/glTF";
+import "@babylonjs/loaders/glTF/2.0";
 
 export default class Director {
   static getInstance() {
@@ -25,28 +22,34 @@ export default class Director {
   constructor() {
     console.log("Director created");
 
-    this.dataStore = DataStore.getInstance();
-    this.engine = null;
     this.canvas = null;
+    this.engine = null;
     this.id = null;
     this.scene = null;
-    this.assetsManager = null;
     this.arcRotateCamera = null;
+    this.assetsManager = null;
   }
 
-  initialize = () => {
-    this.engine = this.dataStore.get("engine");
-    this.canvas = this.dataStore.get("canvas");
+  initialize = (canvas) => {
+    this.canvas = canvas;
+
+    const engine = new Engine(canvas, true);
+    engine.setHardwareScalingLevel(1.0);
+    this.engine = engine;
+
+    const onResizeWindow = () => {
+      engine.resize();
+    };
+    window.addEventListener("resize", onResizeWindow);
   };
 
   clear = () => {
-    this.dataStore = null;
-    this.engine = null;
     this.canvas = null;
+    this.engine = null;
     this.id = null;
     this.scene = null;
-    this.assetsManager = null;
     this.arcRotateCamera = null;
+    this.assetsManager = null;
   };
 
   createScene = (id) => {
@@ -61,16 +64,12 @@ export default class Director {
     this.loadAssets();
 
     // Test objects
-    Mesh.CreateBox("testBox", 1, this.scene);
+    // Mesh.CreateBox("testBox", 1, this.scene);
     new HemisphericLight("light1", new Vector3(0, 2, 0), this.scene);
 
     this.engine.runRenderLoop(() => {
       this.scene.render();
     });
-
-    // if (id !== "school") {
-    //   this.dataStore.get("setPortalTarget")(id);
-    // }
 
     console.log(`SCENE ${this.id} CREATED, RENDERING STARTED`);
   };
@@ -86,8 +85,6 @@ export default class Director {
     this.scene = null;
     this.assetsManager = null;
     this.arcRotateCamera = null;
-
-    // this.dataStore.get("setLoadFinish")(false);
   };
 
   createCamera = () => {
@@ -152,8 +149,6 @@ export default class Director {
         Matrix.RotationY(Tools.ToRadians(hdrRotation))
       );
 
-      this.dataStore.put("envTexture", envTexture);
-
       console.log("HDR loaded");
     };
 
@@ -167,17 +162,6 @@ export default class Director {
         // Material
         this.processMaterial(mesh);
       }
-
-      // Create mesh buttons
-      // meshButton(this.scene);
-
-      // Create camera focus transitions
-      // this.initializeCameraFocus();
-
-      // Notify load finish
-      // setTimeout(() => {
-      //   this.dataStore.get("setLoadFinish")(true);
-      // }, 200);
     };
 
     assetsManager.load();
@@ -198,26 +182,6 @@ export default class Director {
         mesh.material.transparencyMode = 2;
         mesh.material.alpha = 0.5;
       }
-
-      // Lightmaps
-      // if (mesh.name.includes("LM")) {
-      //   // const nameKeyWord = mesh.name.split(".")[0];
-      //   // console.log(nameKeyWord);
-
-      //   const lightmap = new Texture(
-      //     `./assets/lightmap/bake_${mesh.name}_DF.jpeg`,
-      //     this.scene
-      //   );
-
-      //   lightmap.level = 1.1;
-      //   lightmap.vScale = -1.0;
-
-      //   mesh.material.lightmapTexture = lightmap;
-      //   mesh.material.lightmapTexture.coordinatesIndex = 1;
-      //   mesh.material.useLightmapAsShadowmap = false;
-
-      //   mesh.material.environmentIntensity = 0.075;
-      // }
     }
   };
 }

@@ -1,17 +1,17 @@
 <template>
   <div id="app">
-    <VirtualExibition />
+    <VirtualExhibition />
   </div>
 </template>
 
 <script>
-import VirtualExibition from "./components/VirtualExibition";
+import VirtualExhibition from "./components/VirtualExhibition";
 
 export default {
   name: "App",
   components: {
-    VirtualExibition
-  }
+    VirtualExhibition,
+  },
 };
 </script>
 
